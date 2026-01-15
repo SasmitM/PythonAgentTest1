@@ -1,9 +1,10 @@
 from langchain_community.tools import WikipediaQueryRun, DuckDuckGoSearchRun
 from langchain_community.utilities import WikipediaAPIWrapper
-from langchain.tools import Tool
+from langchain_core.tools import StructuredTool
 from datetime import datetime
 
-def save_to_txt(data: str, filename: str = "research_output.txt"):
+def save_to_txt(data: str, filename: str = "research_output.txt") -> str:
+    """Saves structured research data to a text file."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     formatted_text = f"--- Research Output ---\nTimestamp: {timestamp}\n\n{data}\n\n"
 
@@ -12,19 +13,14 @@ def save_to_txt(data: str, filename: str = "research_output.txt"):
     
     return f"Data successfully saved to {filename}"
 
-save_tool = Tool(
-    name="save_text_to_file",
+# Use the tools directly - they're already LangChain tools
+search_tool = DuckDuckGoSearchRun()
+wiki_tool = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=100))
+
+# Create a structured tool for save
+save_tool = StructuredTool.from_function(
     func=save_to_txt,
-    description="Saves structured research data to a text file.",
+    name="save_text_to_file",
+    description="Saves structured research data to a text file. Takes data as a string and optional filename."
 )
-
-search = DuckDuckGoSearchRun()
-search_tool = Tool(
-    name="search",
-    func=search.run,
-    description="Search the web for information",
-)
-
-api_wrapper = WikipediaAPIWrapper(top_k_results=1, doc_content_chars_max=100)
-wiki_tool = WikipediaQueryRun(api_wrapper=api_wrapper)
 
