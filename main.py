@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
-from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain.agents import create_tool_calling_agent, AgentExecutor
@@ -16,7 +15,7 @@ class ResearchResponse(BaseModel):
     tools_used: list[str]
     
 
-llm = ChatAnthropic(model="claude-3-5-sonnet-20241022")
+llm = ChatOpenAI(model="gpt-4o")
 parser = PydanticOutputParser(pydantic_object=ResearchResponse)
 
 prompt = ChatPromptTemplate.from_messages(
@@ -47,7 +46,8 @@ query = input("What can i help you research? ")
 raw_response = agent_executor.invoke({"query": query})
 
 try:
-    structured_response = parser.parse(raw_response.get("output")[0]["text"])
+    # AgentExecutor returns output in "output" key as a string
+    structured_response = parser.parse(raw_response.get("output", ""))
     print(structured_response)
 except Exception as e:
     print("Error parsing response", e, "Raw Response - ", raw_response)
